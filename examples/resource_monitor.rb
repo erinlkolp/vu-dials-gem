@@ -18,6 +18,7 @@ require "vu_dials"
 require "vmstat"
 
 require_relative "name_dials"
+require_relative "set_backgrounds"
 
 # --- configuration (environment) --------------------------------------------
 VU1_SERVER_ADDRESS = ENV.fetch("VU1_SERVER_ADDRESS", "localhost")
@@ -172,6 +173,9 @@ def main
 
   # Name the dials on startup so resolve_dial_uids can find them by name.
   NameDials.apply(dial) { |msg| LOG.info(msg) }
+
+  # Give every dial the shared analog-meter face.
+  SetBackgrounds.apply(dial) { |msg| LOG.info(msg) }
 
   uids = resolve_dial_uids(dial, DIAL_NAMES)
   LOG.info("Resolved dial UIDs: #{uids.inspect}")
