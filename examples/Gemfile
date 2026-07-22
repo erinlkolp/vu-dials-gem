@@ -1,0 +1,10 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# The gem under example, pulled straight from this repo.
+gem "vu_dials", path: ".."
+
+# Real system metrics (CPU/RAM/disk/network). Only the example depends on this;
+# vu_dials itself stays zero-dependency.
+gem "vmstat", "~> 2.3"
