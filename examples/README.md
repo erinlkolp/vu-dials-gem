@@ -18,20 +18,29 @@ cp .env.example .env   # then edit API_KEY (and anything else you need)
 env $(grep -v '^#' .env | xargs) bundle exec ruby resource_monitor.rb
 ```
 
-On startup the script names the dials (see below), resolves them by name, then
-loops every `POLL_INTERVAL_SECONDS`, pushing each metric as a 0–100 value with a
+On startup the script names the dials, sets their background image, turns all
+their backlights green, and resolves them by name; then it loops every
+`POLL_INTERVAL_SECONDS`, pushing each metric as a 0–100 value with a
 green/yellow/red backlight based on the thresholds. Press `Ctrl-C` to stop — it
 blanks all four dials on the way out.
 
-## Naming the dials
+## Startup helpers
 
-`name_dials.rb` maps hardware UIDs to names and is applied automatically on
-startup. **Edit its `UID_TO_NAME` map to match your hardware** — find your real
-UIDs with `dial.list_dials` or the VU1 web UI. You can also run it standalone:
+Three small helper modules run automatically on startup. Each one is also
+runnable standalone, e.g.:
 
 ```bash
 env $(grep -v '^#' .env | xargs) bundle exec ruby name_dials.rb
 ```
+
+| File | What it does |
+| --- | --- |
+| `name_dials.rb` | Maps hardware UIDs to names so the monitor can resolve dials by name. **Edit its `UID_TO_NAME` map to match your hardware** — find your real UIDs with `dial.list_dials` or the VU1 web UI. |
+| `set_backgrounds.rb` | Pushes the shared `analog-meter.jpg` face to every dial. |
+| `set_backlights.rb` | Sets every dial's backlight to one color (green by default). Pass `red:`/`green:`/`blue:` to `SetBacklights.apply` for a different one; channels are 0–100. |
+
+`set_backgrounds.rb` and `set_backlights.rb` both reuse `NameDials::UID_TO_NAME`
+for the dial list, so editing the UIDs in one place covers all three.
 
 ## Configuration (`.env`)
 
