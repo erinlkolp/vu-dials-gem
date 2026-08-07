@@ -19,6 +19,7 @@ require "vmstat"
 
 require_relative "name_dials"
 require_relative "set_backgrounds"
+require_relative "set_backlights"
 
 # --- configuration (environment) --------------------------------------------
 VU1_SERVER_ADDRESS = ENV.fetch("VU1_SERVER_ADDRESS", "localhost")
@@ -176,6 +177,9 @@ def main
 
   # Give every dial the shared analog-meter face.
   SetBackgrounds.apply(dial) { |msg| LOG.info(msg) }
+
+  # Light every dial green up front so they aren't dark until the first poll.
+  SetBacklights.apply(dial) { |msg| LOG.info(msg) }
 
   uids = resolve_dial_uids(dial, DIAL_NAMES)
   LOG.info("Resolved dial UIDs: #{uids.inspect}")
