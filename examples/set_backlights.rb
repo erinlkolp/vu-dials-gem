@@ -9,7 +9,7 @@
 #
 #   API_KEY=... ruby set_backlights.rb
 #
-# The dial UIDs are reused from name_dials.rb so all the helpers stay in sync.
+# The dial lineup comes from name_dials.rb so all the helpers stay in sync.
 
 require "vu_dials"
 
@@ -22,12 +22,12 @@ module SetBacklights
 
   module_function
 
-  # Set the same backlight color on every known dial UID. Yields a message per
-  # dial if a block is given, so callers can route it through their own logger.
+  # Set the same backlight color on every known dial. Yields a message per dial
+  # if a block is given, so callers can route it through their own logger.
   def apply(dial, red: GREEN[:red], green: GREEN[:green], blue: GREEN[:blue])
-    NameDials::UID_TO_NAME.each_key do |uid|
-      dial.set_color(uid: uid, red: red, green: green, blue: blue)
-      yield "Set backlight on dial #{uid} -> (#{red}, #{green}, #{blue})" if block_given?
+    NameDials::DIALS.each_value do |spec|
+      dial.set_color(uid: spec[:uid], red: red, green: green, blue: blue)
+      yield "Set backlight on dial #{spec[:uid]} -> (#{red}, #{green}, #{blue})" if block_given?
     end
   end
 end
