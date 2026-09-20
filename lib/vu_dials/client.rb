@@ -3,6 +3,7 @@
 require "cgi"
 require "json"
 require "net/http"
+require "timeout"
 require "uri"
 
 module VuDials
@@ -30,7 +31,7 @@ module VuDials
     # it appears in server access and proxy logs. This is intentional; the VU1
     # server only supports key-in-URL auth over plain HTTP.
     def build_uri(api_call, query = {})
-      params = { auth_param => @key }.merge(query)
+      params = { auth_param => @key }.merge(query).compact
       encoded = params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
       URI("#{@server_url}/#{API_PREFIX}/#{api_call}?#{encoded}")
     end
@@ -40,6 +41,7 @@ module VuDials
       http = Net::HTTP.new(uri.host, uri.port)
       http.open_timeout = @timeout
       http.read_timeout = @timeout
+      http.write_timeout = @timeout if http.respond_to?(:write_timeout=)
 
       req =
         case method
@@ -54,7 +56,7 @@ module VuDials
       response =
         begin
           http.request(req)
-        rescue SocketError, SystemCallError, Net::OpenTimeout, Net::ReadTimeout, IOError => e
+        rescue SocketError, SystemCallError, Timeout::Error, Net::ProtocolError, IOError => e
           raise ConnectionError, e.message
         end
 

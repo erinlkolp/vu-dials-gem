@@ -74,5 +74,25 @@ RSpec.describe VuDials::Admin do
       admin.update_api_key(name: "renamed", target_key: "target", dials: %w[uid1 uid2])
       expect(stub).to have_been_requested
     end
+
+    it "updates only the name when dials is omitted" do
+      stub = stub_request(:post, "#{base}/admin/keys/update")
+             .with(query: { "admin_key" => "test-admin-key", "key" => "target", "name" => "renamed" })
+             .to_return(ok)
+      admin.update_api_key(target_key: "target", name: "renamed")
+      expect(stub).to have_been_requested
+    end
+
+    it "updates only dials when name is omitted" do
+      stub = stub_request(:post, "#{base}/admin/keys/update")
+             .with(query: { "admin_key" => "test-admin-key", "key" => "target", "dials" => "uid1;uid2" })
+             .to_return(ok)
+      admin.update_api_key(target_key: "target", dials: %w[uid1 uid2])
+      expect(stub).to have_been_requested
+    end
+
+    it "raises ArgumentError if neither name nor dials is provided" do
+      expect { admin.update_api_key(target_key: "target") }.to raise_error(ArgumentError, /name or dials/)
+    end
   end
 end
