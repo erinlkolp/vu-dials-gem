@@ -44,6 +44,11 @@ RSpec.describe VuDials::Client do
       expect(uri.to_s).to include("name=a%26b%3Dc")
     end
 
+    it "omits query params whose value is nil" do
+      uri = key_client.send(:build_uri, "dial/abc/easing/dial", { "period" => 5, "step" => nil })
+      expect(uri.to_s).to eq("http://localhost:5340/api/v0/dial/abc/easing/dial?key=mykey&period=5")
+    end
+
     it "raises NotImplementedError when the base class is used directly" do
       base = described_class.new(host: "localhost", port: 5340, key: "k")
       expect { base.send(:build_uri, "dial/list") }.to raise_error(NotImplementedError)
@@ -95,6 +100,27 @@ RSpec.describe VuDials::Client do
     it "wraps a timeout in ConnectionError" do
       stub_request(:get, %r{/api/v0/dial/list}).to_timeout
       expect { client.send(:request, :get, "dial/list") }.to raise_error(VuDials::ConnectionError)
+    end
+
+    it "wraps a write timeout in ConnectionError" do
+      stub_request(:get, %r{/api/v0/dial/list}).to_raise(Net::WriteTimeout)
+      expect { client.send(:request, :get, "dial/list") }.to raise_error(VuDials::ConnectionError)
+    end
+
+    it "wraps a protocol error in ConnectionError" do
+      stub_request(:get, %r{/api/v0/dial/list}).to_raise(Net::ProtocolError)
+      expect { client.send(:request, :get, "dial/list") }.to raise_error(VuDials::ConnectionError)
+    end
+
+    it "configures write_timeout alongside open and read timeouts" do
+      http_double = instance_double(Net::HTTP)
+      allow(Net::HTTP).to receive(:new).and_return(http_double)
+      expect(http_double).to receive(:open_timeout=).with(10)
+      expect(http_double).to receive(:read_timeout=).with(10)
+      expect(http_double).to receive(:write_timeout=).with(10)
+      allow(http_double).to receive(:request).and_return(instance_double(Net::HTTPResponse, code: "200", body: "{}"))
+
+      client.send(:request, :get, "dial/list")
     end
 
     it "does not mask a missing upload file as a ConnectionError" do

@@ -25,9 +25,14 @@ module VuDials
               query: { "name" => name, "dials" => dials.join(";") })
     end
 
-    def update_api_key(name:, target_key:, dials:)
-      request(:post, "admin/keys/update",
-              query: { "key" => target_key, "name" => name, "dials" => dials.join(";") })
+    def update_api_key(target_key:, name: nil, dials: nil)
+      raise ArgumentError, "At least one of name or dials must be provided" if name.nil? && dials.nil?
+
+      query = { "key" => target_key }
+      query["name"] = name unless name.nil?
+      query["dials"] = Array(dials).join(";") unless dials.nil?
+
+      request(:post, "admin/keys/update", query: query)
     end
 
     private

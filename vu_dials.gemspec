@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary = "Ruby client for Streacom VU1 Dials"
   spec.description = "An idiomatic Ruby client library for Streacom's VU1 Dial " \
                      "hardware, communicating with a local VU1 server over HTTP."
-  spec.homepage = "https://github.com/erinlkolp/vu1-dial-python-module"
+  spec.homepage = "https://github.com/erinlkolp/vu-dials-gem"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.0"
 

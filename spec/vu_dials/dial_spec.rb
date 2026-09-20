@@ -39,6 +39,13 @@ RSpec.describe VuDials::Dial do
       dial.info(uid: "a&b")
       expect(stub).to have_been_requested
     end
+
+    it "percent-encodes spaces in uid as %20 rather than +" do
+      stub = stub_request(:get, "#{base}/dial/a%20b/status")
+             .with(query: hash_including("key" => "test-api-key")).to_return(ok)
+      dial.info(uid: "a b")
+      expect(stub).to have_been_requested
+    end
   end
 
   describe "#set_value" do
@@ -49,11 +56,15 @@ RSpec.describe VuDials::Dial do
       expect(stub).to have_been_requested
     end
 
-    it "coerces the value to an integer" do
+    it "coerces float value to integer" do
       stub = stub_request(:get, "#{base}/dial/abc/set")
-             .with(query: hash_including("value" => "0")).to_return(ok)
-      dial.set_value(uid: "abc", value: 0)
+             .with(query: hash_including("value" => "75")).to_return(ok)
+      dial.set_value(uid: "abc", value: 75.6)
       expect(stub).to have_been_requested
+    end
+
+    it "raises ArgumentError if value is nil" do
+      expect { dial.set_value(uid: "abc", value: nil) }.to raise_error(ArgumentError, /value cannot be nil/)
     end
   end
 
@@ -64,6 +75,15 @@ RSpec.describe VuDials::Dial do
              .to_return(ok)
       dial.set_color(uid: "abc", red: 10, green: 20, blue: 30)
       expect(stub).to have_been_requested
+    end
+
+    it "raises ArgumentError if any color channel is nil" do
+      expect { dial.set_color(uid: "abc", red: nil, green: 50, blue: 50) }
+        .to raise_error(ArgumentError, /cannot be nil/)
+      expect { dial.set_color(uid: "abc", red: 50, green: nil, blue: 50) }
+        .to raise_error(ArgumentError, /cannot be nil/)
+      expect { dial.set_color(uid: "abc", red: 50, green: 50, blue: nil) }
+        .to raise_error(ArgumentError, /cannot be nil/)
     end
   end
 
@@ -119,6 +139,24 @@ RSpec.describe VuDials::Dial do
       dial.set_easing(uid: "abc", period: 5, step: 2)
       expect(stub).to have_been_requested
     end
+
+    it "GETs dial/{uid}/easing/dial with only period when step is omitted" do
+      stub = stub_request(:get, "#{base}/dial/abc/easing/dial")
+             .with(query: { "key" => "test-api-key", "period" => "5" }).to_return(ok)
+      dial.set_easing(uid: "abc", period: 5)
+      expect(stub).to have_been_requested
+    end
+
+    it "GETs dial/{uid}/easing/dial with only step when period is omitted" do
+      stub = stub_request(:get, "#{base}/dial/abc/easing/dial")
+             .with(query: { "key" => "test-api-key", "step" => "2" }).to_return(ok)
+      dial.set_easing(uid: "abc", step: 2)
+      expect(stub).to have_been_requested
+    end
+
+    it "raises ArgumentError if neither period nor step is provided" do
+      expect { dial.set_easing(uid: "abc") }.to raise_error(ArgumentError, /period or step/)
+    end
   end
 
   describe "#set_backlight_easing" do
@@ -127,6 +165,24 @@ RSpec.describe VuDials::Dial do
              .with(query: hash_including("period" => "5", "step" => "2")).to_return(ok)
       dial.set_backlight_easing(uid: "abc", period: 5, step: 2)
       expect(stub).to have_been_requested
+    end
+
+    it "GETs dial/{uid}/easing/backlight with only period when step is omitted" do
+      stub = stub_request(:get, "#{base}/dial/abc/easing/backlight")
+             .with(query: { "key" => "test-api-key", "period" => "5" }).to_return(ok)
+      dial.set_backlight_easing(uid: "abc", period: 5)
+      expect(stub).to have_been_requested
+    end
+
+    it "GETs dial/{uid}/easing/backlight with only step when period is omitted" do
+      stub = stub_request(:get, "#{base}/dial/abc/easing/backlight")
+             .with(query: { "key" => "test-api-key", "step" => "2" }).to_return(ok)
+      dial.set_backlight_easing(uid: "abc", step: 2)
+      expect(stub).to have_been_requested
+    end
+
+    it "raises ArgumentError if neither period nor step is provided" do
+      expect { dial.set_backlight_easing(uid: "abc") }.to raise_error(ArgumentError, /period or step/)
     end
   end
 

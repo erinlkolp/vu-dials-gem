@@ -13,49 +13,67 @@ module VuDials
     end
 
     def info(uid:)
-      request(:get, "dial/#{CGI.escape(uid)}/status")
+      request(:get, "dial/#{encode_uid(uid)}/status")
     end
 
     def set_value(uid:, value:)
-      request(:get, "dial/#{CGI.escape(uid)}/set", query: { "value" => value.to_i })
+      raise ArgumentError, "value cannot be nil" if value.nil?
+
+      request(:get, "dial/#{encode_uid(uid)}/set", query: { "value" => value.to_i })
     end
 
     def set_color(uid:, red:, green:, blue:)
-      request(:get, "dial/#{CGI.escape(uid)}/backlight",
+      raise ArgumentError, "red, green, and blue cannot be nil" if red.nil? || green.nil? || blue.nil?
+
+      request(:get, "dial/#{encode_uid(uid)}/backlight",
               query: { "red" => red.to_i, "green" => green.to_i, "blue" => blue.to_i })
     end
 
     def set_background(uid:, file:)
-      request(:post, "dial/#{CGI.escape(uid)}/image/set", file: file)
+      request(:post, "dial/#{encode_uid(uid)}/image/set", file: file)
     end
 
     def image_crc(uid:)
-      request(:get, "dial/#{CGI.escape(uid)}/image/crc")
+      request(:get, "dial/#{encode_uid(uid)}/image/crc")
     end
 
     def set_name(uid:, name:)
-      request(:get, "dial/#{CGI.escape(uid)}/name", query: { "name" => name })
+      request(:get, "dial/#{encode_uid(uid)}/name", query: { "name" => name })
     end
 
     def reload_hw_info(uid:)
-      request(:get, "dial/#{CGI.escape(uid)}/reload")
+      request(:get, "dial/#{encode_uid(uid)}/reload")
     end
 
-    def set_easing(uid:, period:, step:)
-      request(:get, "dial/#{CGI.escape(uid)}/easing/dial",
-              query: { "period" => period.to_i, "step" => step.to_i })
+    def set_easing(uid:, period: nil, step: nil)
+      raise ArgumentError, "At least one of period or step must be provided" if period.nil? && step.nil?
+
+      query = {}
+      query["period"] = period.to_i unless period.nil?
+      query["step"] = step.to_i unless step.nil?
+
+      request(:get, "dial/#{encode_uid(uid)}/easing/dial", query: query)
     end
 
-    def set_backlight_easing(uid:, period:, step:)
-      request(:get, "dial/#{CGI.escape(uid)}/easing/backlight",
-              query: { "period" => period.to_i, "step" => step.to_i })
+    def set_backlight_easing(uid:, period: nil, step: nil)
+      raise ArgumentError, "At least one of period or step must be provided" if period.nil? && step.nil?
+
+      query = {}
+      query["period"] = period.to_i unless period.nil?
+      query["step"] = step.to_i unless step.nil?
+
+      request(:get, "dial/#{encode_uid(uid)}/easing/backlight", query: query)
     end
 
     def easing_config(uid:)
-      request(:get, "dial/#{CGI.escape(uid)}/easing/get")
+      request(:get, "dial/#{encode_uid(uid)}/easing/get")
     end
 
     private
+
+    def encode_uid(uid)
+      CGI.escape(uid.to_s).gsub("+", "%20")
+    end
 
     def auth_param
       "key"
